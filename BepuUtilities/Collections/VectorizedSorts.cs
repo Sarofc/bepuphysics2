@@ -1,7 +1,9 @@
 ﻿using BepuUtilities.Memory;
 using System;
 using System.Diagnostics;
+#if NET8_0_OR_GREATER
 using System.Runtime.Intrinsics;
+#endif
 
 namespace BepuUtilities.Collections
 {
@@ -23,6 +25,7 @@ namespace BepuUtilities.Collections
         /// <param name="elementCount">Number of actual elements in the paddedKeys buffer.</param>
         public unsafe static void VectorCountingSort(Buffer<float> paddedKeys, Buffer<int> paddedTargetIndices, int elementCount)
         {
+#if NET7_0_OR_GREATER
             if (Vector256.IsHardwareAccelerated)
             {
                 Debug.Assert(paddedKeys.length == paddedTargetIndices.length && paddedKeys.length % 8 == 0 && paddedKeys.Length >= elementCount,
@@ -114,6 +117,7 @@ namespace BepuUtilities.Collections
                 }
             }
             else
+#endif
             {
                 throw new NotSupportedException("This sort assumes that Vector256.IsHardwareAccelerated or Vector128.IsHardwareAccelerated. It is the caller's responsibility to guarantee this.");
             }

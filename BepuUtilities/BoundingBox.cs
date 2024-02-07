@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+#if NET7_0_OR_GREATER
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+#endif
 
 namespace BepuUtilities
 {
@@ -92,6 +94,7 @@ namespace BepuUtilities
             //    return (Vector256.ExtractMostSignificantBits(noIntersection) & 0b1110111) == 0;
             //}
             //else
+#if NET7_0_OR_GREATER
             if (Vector128.IsHardwareAccelerated)
             {
                 //THIS IS A POTENTIAL GC HOLE IF CHILDREN ARE PASSED FROM UNPINNED MANAGED MEMORY
@@ -105,6 +108,7 @@ namespace BepuUtilities
                 return (Vector128.ExtractMostSignificantBits(noIntersectionOnAxes) & 0b111) == 0;
             }
             else
+#endif
             {
                 var a = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in boundingBoxA));
                 var b = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in boundingBoxB));
@@ -138,11 +142,13 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Intersects(Vector3 minA, Vector3 maxA, Vector3 minB, Vector3 maxB)
         {
+#if NET7_0_OR_GREATER
             if (Vector128.IsHardwareAccelerated)
             {
                 var noIntersectionOnAxes = Vector128.LessThan(maxA.AsVector128(), minB.AsVector128()) | Vector128.LessThan(maxB.AsVector128(), minA.AsVector128());
                 return (Vector128.ExtractMostSignificantBits(noIntersectionOnAxes) & 0b111) == 0;
             }
+#endif
             return maxA.X >= minB.X & maxA.Y >= minB.Y & maxA.Z >= minB.Z &
                    maxB.X >= minA.X & maxB.Y >= minA.Y & maxB.Z >= minA.Z;
         }
@@ -201,6 +207,7 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateMergedUnsafeWithPreservation<TA, TB>(in TA boundingBoxA, in TB boundingBoxB, out TA merged) where TA : unmanaged where TB : unmanaged
         {
+#if NET7_0_OR_GREATER
             if (Vector128.IsHardwareAccelerated)
             {
                 Unsafe.SkipInit(out merged);
@@ -225,6 +232,7 @@ namespace BepuUtilities
                 }
             }
             else
+#endif
             {
                 ref var a = ref Unsafe.As<TA, BoundingBox>(ref Unsafe.AsRef(in boundingBoxA));
                 ref var b = ref Unsafe.As<TB, BoundingBox>(ref Unsafe.AsRef(in boundingBoxB));
@@ -247,6 +255,7 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateMergedUnsafe<TA, TB>(in TA boundingBoxA, in TB boundingBoxB, out TA merged) where TA : unmanaged where TB : unmanaged
         {
+#if NET7_0_OR_GREATER
             if (Vector128.IsHardwareAccelerated)
             {
                 Unsafe.SkipInit(out merged);
@@ -260,6 +269,7 @@ namespace BepuUtilities
                     Unsafe.Add(ref Unsafe.As<TB, Vector128<float>>(ref Unsafe.AsRef(in boundingBoxB)), 1));
             }
             else
+#endif
             {
                 ref var a = ref Unsafe.As<TA, BoundingBox>(ref Unsafe.AsRef(in boundingBoxA));
                 ref var b = ref Unsafe.As<TB, BoundingBox>(ref Unsafe.AsRef(in boundingBoxB));

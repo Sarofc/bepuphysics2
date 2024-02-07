@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using BepuUtilities.Memory;
@@ -25,7 +26,11 @@ public unsafe struct TaskStack
     /// Most recently pushed job on the stack. May be null if the stack is empty.
     /// </summary>
     /// <remarks>Pointers and generics don't play well, alas.</remarks>
+#if NET8_0_OR_GREATER
     volatile nuint head;
+#else
+    volatile IntPtr head;
+#endif
 
     /// <summary>
     /// Constructs a new parallel task stack.
@@ -56,7 +61,11 @@ public unsafe struct TaskStack
             workers[i].Reset(dispatcher.WorkerPools[workers[i].WorkerIndex]);
         }
         padded.Stop = false;
+#if NET8_0_OR_GREATER
         head = (nuint)null;
+#else
+        head = (IntPtr)null;
+#endif
     }
 
     /// <summary>
@@ -86,7 +95,7 @@ public unsafe struct TaskStack
             {
                 if (job == null)
                     break;
-                sum += int.Max(0, job->Counter);
+                sum += Math.Max(0, job->Counter);
                 job = job->Previous;
             }
             return sum;
@@ -164,7 +173,11 @@ public unsafe struct TaskStack
                 //Note that other threads might be doing the same thing; we must use an interlocked operation to try to swap the head.
                 //If this fails, the head has changed before we could remove it and the current empty job will persists in the stack until some other dequeue finds it.
                 //That's okay.
+#if NET8_0_OR_GREATER
                 Interlocked.CompareExchange(ref head, (nuint)job->Previous, (nuint)job);
+#else
+                Interlocked.CompareExchange(ref head, (IntPtr)job->Previous, (IntPtr)job);
+#endif
                 job = (Job*)head;
             }
         }
@@ -224,7 +237,11 @@ public unsafe struct TaskStack
     {
         Job* job = workers[workerIndex].AllocateJob(tasks, tag, dispatcher);
         job->Previous = (Job*)head;
+#if NET8_0_OR_GREATER
         head = (nuint)job;
+#else
+        head = (IntPtr)job;
+#endif
     }
     /// <summary>
     /// Pushes a task onto the task stack. This function is not thread safe.
@@ -256,7 +273,11 @@ public unsafe struct TaskStack
             //Pre-set the previous pointer so that it's visible when the job is swapped in.
             //Note that if the head pointer changes between the first set attempt and the swap, the previous pointer will be wrong and we must try again.
             job->Previous = (Job*)head;
+#if NET8_0_OR_GREATER
             if ((nuint)job->Previous == Interlocked.CompareExchange(ref head, (nuint)job, (nuint)job->Previous))
+#else
+            if ((IntPtr)job->Previous == Interlocked.CompareExchange(ref head, (IntPtr)job, (IntPtr)job->Previous))
+#endif
                 break;
         }
     }
@@ -271,7 +292,11 @@ public unsafe struct TaskStack
     /// <returns>True if the push succeeded, false if it was contested.</returns>
     public void Push(Task task, int workerIndex, IThreadDispatcher dispatcher, ulong tag = 0)
     {
+#if NET8_0_OR_GREATER
         Push(new Span<Task>(ref task), workerIndex, dispatcher, tag);
+#else
+        Push(new Span<Task>(&task, 1), workerIndex, dispatcher, tag);
+#endif
     }
 
     /// <summary>
@@ -307,7 +332,11 @@ public unsafe struct TaskStack
     /// <returns>Handle of the continuation created for these task.</returns>
     public ContinuationHandle AllocateContinuationAndPush(Task task, int workerIndex, IThreadDispatcher dispatcher, ulong tag = 0, Task onComplete = default)
     {
+#if NET8_0_OR_GREATER
         return AllocateContinuationAndPush(new Span<Task>(ref task), workerIndex, dispatcher, tag, onComplete);
+#else
+        return AllocateContinuationAndPush(new Span<Task>(&task, 1), workerIndex, dispatcher, tag, onComplete);
+#endif
     }
 
     /// <summary>
@@ -337,7 +366,11 @@ public unsafe struct TaskStack
             }
             else
             {
+#if NET8_0_OR_GREATER
                 waiter.SpinOnce(-1);
+#else
+                waiter.SpinOnce(); // TODO 这个实现非常慢，其他环境先不要用
+#endif
             }
         }
     }
@@ -424,7 +457,11 @@ public unsafe struct TaskStack
     /// <remarks>Note that this will keep working until the task completes. It may execute tasks unrelated to the requested task while waiting on other workers.</remarks>
     public void RunTask(Task task, int workerIndex, IThreadDispatcher dispatcher, ulong tag = 0)
     {
+#if NET8_0_OR_GREATER
         RunTasks(new Span<Task>(ref task), workerIndex, dispatcher, tag);
+#else
+        RunTasks(new Span<Task>(&task, 1), workerIndex, dispatcher, tag);
+#endif
     }
 
     /// <summary>
@@ -439,7 +476,11 @@ public unsafe struct TaskStack
     /// <remarks>Note that this will keep working the task completes. It may execute tasks unrelated to the requested task while waiting on other workers to complete constituent tasks.</remarks>
     public void RunTask<TJobFilter>(Task task, int workerIndex, IThreadDispatcher dispatcher, ref TJobFilter filter, ulong tag = 0) where TJobFilter : IJobFilter
     {
+#if NET8_0_OR_GREATER
         RunTasks(new Span<Task>(ref task), workerIndex, dispatcher, ref filter, tag);
+#else
+        RunTasks(new Span<Task>(&task, 1), workerIndex, dispatcher, ref filter, tag);
+#endif
     }
 
     /// <summary>
@@ -576,7 +617,11 @@ public unsafe struct TaskStack
                     break;
                 default:
                     //No work available, but we should keep going.
+#if NET8_0_OR_GREATER
                     waiter.SpinOnce(-1);
+#else
+                    waiter.SpinOnce();
+#endif
                     break;
             }
         }

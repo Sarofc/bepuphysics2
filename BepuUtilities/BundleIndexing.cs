@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+#if NET8_0_OR_GREATER
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+#endif
 
 namespace BepuUtilities
 {
@@ -63,6 +65,7 @@ namespace BepuUtilities
         public static unsafe Vector<int> CreateTrailingMaskForCountInBundle(int countInBundle)
         {
             //TODO: Cross platform intrinsics rewrite
+#if NET8_0_OR_GREATER
             if (Avx.IsSupported && Vector<int>.Count == 8)
             {
                 return Avx.CompareLessThanOrEqual(Vector256.Create((float)countInBundle), Vector256.Create(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f)).AsInt32().AsVector();
@@ -72,6 +75,7 @@ namespace BepuUtilities
                 return Sse.CompareLessThanOrEqual(Vector128.Create((float)countInBundle), Vector128.Create(0f, 1f, 2f, 3f)).AsInt32().AsVector();
             }
             else
+#endif
             {
                 Vector<int> mask;
                 var toReturnPointer = (int*)&mask;
@@ -88,6 +92,7 @@ namespace BepuUtilities
         public static unsafe Vector<int> CreateMaskForCountInBundle(int countInBundle)
         {
             //TODO: Cross platform intrinsics rewrite
+#if NET8_0_OR_GREATER
             if (Avx.IsSupported && Vector<int>.Count == 8)
             {
                 return Avx.CompareGreaterThan(Vector256.Create((float)countInBundle), Vector256.Create(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f)).AsInt32().AsVector();
@@ -97,6 +102,7 @@ namespace BepuUtilities
                 return Sse.CompareGreaterThan(Vector128.Create((float)countInBundle), Vector128.Create(0f, 1f, 2f, 3f)).AsInt32().AsVector();
             }
             else
+#endif
             {
                 Vector<int> mask;
                 var toReturnPointer = (int*)&mask;
@@ -113,6 +119,7 @@ namespace BepuUtilities
         public static int GetFirstSetLaneIndex(Vector<int> v)
         {
             //TODO: Probable cross platform intrinsics rewrite
+#if NET8_0_OR_GREATER
             if (Avx.IsSupported && Vector<int>.Count == 8)
             {
                 var scalarMask = Avx.MoveMask(v.AsVector256().As<int, float>());
@@ -124,6 +131,7 @@ namespace BepuUtilities
                 return BitOperations.TrailingZeroCount(scalarMask);
             }
             else
+#endif
             {
                 Debug.Assert(Vector<int>.Count <= 8, "We made an assumption that AVX512 and similar widths aren't available, this should be updated if vectors get wider!");
                 for (int i = 0; i < Vector<int>.Count; ++i)
@@ -143,6 +151,7 @@ namespace BepuUtilities
         public static int GetLastSetLaneCount(Vector<int> v)
         {
             //TODO: Cross platform intrinsics rewrite
+#if NET8_0_OR_GREATER
             if (Avx.IsSupported && Vector<int>.Count == 8)
             {
                 var scalarMask = Avx.MoveMask(v.AsVector256().As<int, float>());
@@ -154,6 +163,7 @@ namespace BepuUtilities
                 return 32 - BitOperations.LeadingZeroCount((uint)scalarMask);
             }
             else
+#endif
             {
                 Debug.Assert(Vector<int>.Count <= 8, "We made an assumption that AVX512 and similar widths aren't available, this should be updated if vectors get wider!");
                 for (int i = Vector<int>.Count - 1; i >= 0; --i)

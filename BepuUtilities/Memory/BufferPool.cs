@@ -80,7 +80,7 @@ namespace BepuUtilities.Memory
                 //Suballocations from the block will always occur on pow2 boundaries, so the only way for a suballocation to violate this alignment is if an individual 
                 //suballocation is smaller than the alignment- in which case it doesn't require the alignment to be that wide. Also, since the alignment and 
                 //suballocations are both pow2 sized, they won't drift out of sync.
-                Blocks[blockIndex] = (byte*)NativeMemory.AlignedAlloc((nuint)BlockSize, BlockAlignment);
+                Blocks[blockIndex] = (byte*)FNativeMemory.AlignedAlloc((nuint)BlockSize, BlockAlignment);
                 BlockCount = blockIndex + 1;
             }
 
@@ -115,7 +115,7 @@ namespace BepuUtilities.Memory
                 var blockIndex = slot >> SuballocationsPerBlockShift;
                 if (blockIndex >= Blocks.Length)
                 {
-                    Resize((int)BitOperations.RoundUpToPowerOf2((uint)(blockIndex + 1)));
+                    Resize((int)FBitOperations.RoundUpToPowerOf2((uint)(blockIndex + 1)));
                 }
                 if (blockIndex >= BlockCount)
                 {
@@ -167,7 +167,7 @@ namespace BepuUtilities.Memory
 
             public readonly void Return(int slotIndex)
             {
-#if DEBUG 
+#if DEBUG
                 Debug.Assert(outstandingIds.Remove(slotIndex),
                     "This buffer id must have been taken from the pool previously.");
 #if LEAKDEBUG
@@ -201,7 +201,7 @@ namespace BepuUtilities.Memory
 #endif
                 for (int i = 0; i < BlockCount; ++i)
                 {
-                    NativeMemory.AlignedFree(Blocks[i]);
+                    FNativeMemory.AlignedFree(Blocks[i]);
                     Blocks[i] = null;
                 }
                 Slots.Clear();
@@ -430,8 +430,8 @@ namespace BepuUtilities.Memory
         {
             if (count == 0)
                 count = 1;
-            Debug.Assert(BitOperations.RoundUpToPowerOf2((ulong)(count * Unsafe.SizeOf<T>())) < int.MaxValue, "This function assumes that counts aren't going to overflow a signed 32 bit integer.");
-            return ((int)BitOperations.RoundUpToPowerOf2((uint)(count * Unsafe.SizeOf<T>()))) / Unsafe.SizeOf<T>();
+            Debug.Assert(FBitOperations.RoundUpToPowerOf2((ulong)(count * Unsafe.SizeOf<T>())) < int.MaxValue, "This function assumes that counts aren't going to overflow a signed 32 bit integer.");
+            return ((int)FBitOperations.RoundUpToPowerOf2((uint)(count * Unsafe.SizeOf<T>()))) / Unsafe.SizeOf<T>();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

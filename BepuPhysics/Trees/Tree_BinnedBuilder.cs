@@ -170,6 +170,7 @@ namespace BepuPhysics.Trees
             var centroidSpan = centroidMax - centroidMin;
             context->Threading.GetBins(workerIndex, out var binBoundingBoxes, out var binCentroidBoundingBoxes, out var binBoundingBoxesScan, out var binCentroidBoundingBoxesScan, out var binLeafCounts);
 
+#if NET8_0_OR_GREATER
             if (Vector256.IsHardwareAccelerated || Vector128.IsHardwareAccelerated)
             {
                 //Repurpose the bins memory so we don't need to allocate any extra. The bins aren't in use right now anyway.
@@ -223,6 +224,7 @@ namespace BepuPhysics.Trees
                 }
             }
             else
+#endif
             {
                 //No vectorization supported. Fall back to poopymode!
                 if (centroidSpan.X > centroidSpan.Y && centroidSpan.X > centroidSpan.Z)

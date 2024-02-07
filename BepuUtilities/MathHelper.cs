@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+#if NET8_0_OR_GREATER
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+#endif
 
 namespace BepuUtilities
 {
@@ -275,7 +277,7 @@ namespace BepuUtilities
         {
             //Rational approximation over [0, pi/2], use symmetry for the rest.
             var periodCount = x * (float)(0.5 / Math.PI);
-            var periodFraction = periodCount - Vector.Floor(periodCount); //This is a source of error as you get away from 0.
+            var periodFraction = periodCount - FVector.Floor(periodCount); //This is a source of error as you get away from 0.
             var twoPi = new Vector<float>(TwoPi);
             var periodX = periodFraction * twoPi;
 
@@ -315,7 +317,7 @@ namespace BepuUtilities
             //Similar to cos, use a rational approximation for the region of sin from [0, pi/2]. Use symmetry to cover the rest.
             //This has its own implementation rather than just calling into Cos because we want maximum fidelity near 0.
             var periodCount = x * (float)(0.5 / Math.PI);
-            var periodFraction = periodCount - Vector.Floor(periodCount); //This is a source of error as you get away from 0.
+            var periodFraction = periodCount - FVector.Floor(periodCount); //This is a source of error as you get away from 0.
             var twoPi = new Vector<float>(TwoPi);
             var periodX = periodFraction * twoPi;
             //[0, pi/2] = f(x)
@@ -372,13 +374,14 @@ namespace BepuUtilities
         {
             var half = new Vector<float>(0.5f);
             var x = (b - a) * new Vector<float>(1f / TwoPi) + half;
-            difference = (x - Vector.Floor(x) - half) * new Vector<float>(TwoPi);
+            difference = (x - FVector.Floor(x) - half) * new Vector<float>(TwoPi);
         }
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector<float> FastReciprocal(Vector<float> v)
         {
+#if NET8_0_OR_GREATER
             if (Avx.IsSupported && Vector<float>.Count == 8)
             {
                 return Avx.Reciprocal(v.AsVector256()).AsVector();
@@ -388,6 +391,7 @@ namespace BepuUtilities
                 return Sse.Reciprocal(v.AsVector128()).AsVector();
             }
             else
+#endif
             {
                 return Vector<float>.One / v;
             }
@@ -396,6 +400,7 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector<float> FastReciprocalSquareRoot(Vector<float> v)
         {
+#if NET8_0_OR_GREATER
             if (Avx.IsSupported && Vector<float>.Count == 8)
             {
                 return Avx.ReciprocalSqrt(v.AsVector256()).AsVector();
@@ -405,6 +410,7 @@ namespace BepuUtilities
                 return Sse.ReciprocalSqrt(v.AsVector128()).AsVector();
             }
             else
+#endif
             {
                 return Vector<float>.One / Vector.SquareRoot(v);
             }

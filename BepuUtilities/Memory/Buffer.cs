@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-#if !DEBUG
+#if !DEBUG && NET8_0_OR_GREATER
 [module: SkipLocalsInit]
 #endif
 

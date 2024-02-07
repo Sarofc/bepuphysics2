@@ -113,7 +113,7 @@ namespace BepuUtilities.Collections
             if (bundleIndex >= Flags.Length)
             {
                 //Note that the bundle index may be larger than two times the current capacity, since indices are not guaranteed to be appended.
-                InternalResizeForBundleCount(pool, (int)BitOperations.RoundUpToPowerOf2((uint)(bundleIndex + 1)));
+                InternalResizeForBundleCount(pool, (int)FBitOperations.RoundUpToPowerOf2((uint)(bundleIndex + 1)));
             }
             SetUnsafely(index, index >> shift);
         }
@@ -154,7 +154,7 @@ namespace BepuUtilities.Collections
             if (bundleIndex >= Flags.Length)
             {
                 //Note that the bundle index may be larger than two times the current capacity, since indices are not guaranteed to be appended.
-                InternalResizeForBundleCount(pool, (int)BitOperations.RoundUpToPowerOf2((uint)(bundleIndex + 1)));
+                InternalResizeForBundleCount(pool, (int)FBitOperations.RoundUpToPowerOf2((uint)(bundleIndex + 1)));
             }
             Debug.Assert((Flags[index >> shift] & (1ul << (index & mask))) == 0, "Cannot add if it's already present!");
             SetUnsafely(index, bundleIndex);

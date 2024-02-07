@@ -83,7 +83,7 @@ namespace BepuUtilities.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static int GetCapacityMask(int spanLength)
         {
-            return (1 << BitOperations.Log2((uint)spanLength)) - 1;
+            return (1 << FBitOperations.Log2((uint)spanLength)) - 1;
         }
 
         /// <summary>
@@ -560,7 +560,7 @@ namespace BepuUtilities.Collections
         [Conditional("DEBUG")]
         static void ValidateSpanCapacity(ref Buffer<T> span, int capacityMask)
         {
-            Debug.Assert((1 << BitOperations.Log2((uint)span.Length)) - 1 == capacityMask,
+            Debug.Assert((1 << FBitOperations.Log2((uint)span.Length)) - 1 == capacityMask,
                 "Capacity mask should be the largest power of 2 that fits in the allocated span, minus one. This is necessary for efficient modulo operations.");
         }
 
