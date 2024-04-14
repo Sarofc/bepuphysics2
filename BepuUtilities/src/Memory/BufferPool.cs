@@ -1,4 +1,8 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+#define LEAKDEBUG
+#endif
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
@@ -86,7 +90,7 @@ namespace BepuUtilities.Memory
 
             public void EnsureCapacity(int capacity)
             {
-                var neededBlockCount = (int)Math.Ceiling((double)capacity / BlockSize);
+                var neededBlockCount = (int)MathF.Ceiling((float)capacity / BlockSize);
                 if (BlockCount < neededBlockCount)
                 {
                     if (neededBlockCount > Blocks.Length)

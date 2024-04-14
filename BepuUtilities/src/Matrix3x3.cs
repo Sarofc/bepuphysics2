@@ -102,11 +102,11 @@ namespace BepuUtilities
             Transpose((M*)m, (M*)transposed);
         }
 
-        /// <summary>                                                                                                
-        /// Computes the transposed matrix of a matrix.                                                              
-        /// </summary>                                                                                               
-        /// <param name="m">Matrix to transpose.</param>                                                             
-        /// <param name="transposed">Transposed matrix.</param>                                                      
+        /// <summary>                                     
+        /// Computes the transposed matrix of a matrix.
+        /// </summary>                            
+        /// <param name="m">Matrix to transpose.</param>
+        /// <param name="transposed">Transposed matrix.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transpose(in Matrix3x3 m, out Matrix3x3 transposed)
         {
@@ -374,8 +374,8 @@ namespace BepuUtilities
             float xz = axis.X * axis.Z;
             float yz = axis.Y * axis.Z;
 
-            float sinAngle = (float)Math.Sin(angle);
-            float oneMinusCosAngle = 1 - (float)Math.Cos(angle);
+            float sinAngle = MathF.Sin(angle);
+            float oneMinusCosAngle = 1 - MathF.Cos(angle);
 
             result.X = new Vector3(
                 1 + oneMinusCosAngle * (xx - 1),

@@ -238,8 +238,8 @@ namespace BepuUtilities
             float xz = axis.X * axis.Z;
             float yz = axis.Y * axis.Z;
 
-            float sinAngle = (float)Math.Sin(angle);
-            float oneMinusCosAngle = 1 - (float)Math.Cos(angle);
+            float sinAngle = MathF.Sin(angle);
+            float oneMinusCosAngle = 1 - MathF.Cos(angle);
 
             result.X = new Vector4(
                 1 + oneMinusCosAngle * (xx - 1),
@@ -343,7 +343,7 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreatePerspectiveFieldOfView(float fieldOfView, float aspectRatio, float nearClip, float farClip, out Matrix perspective)
         {
-            float h = 1f / ((float)Math.Tan(fieldOfView * 0.5f));
+            float h = 1f / (MathF.Tan(fieldOfView * 0.5f));
             float w = h / aspectRatio;
             float m33 = farClip / (nearClip - farClip);
             perspective.X = new Vector4(w, 0, 0, 0);
@@ -364,7 +364,7 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreatePerspectiveFieldOfViewLH(float fieldOfView, float aspectRatio, float nearClip, float farClip, out Matrix perspective)
         {
-            float h = 1f / ((float)Math.Tan(fieldOfView * 0.5f));
+            float h = 1f / (MathF.Tan(fieldOfView * 0.5f));
             float w = h / aspectRatio;
             float m33 = farClip / (farClip - nearClip);
             perspective.X = new Vector4(w, 0, 0, 0);
@@ -402,8 +402,8 @@ namespace BepuUtilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreatePerspectiveFromFieldOfViews(float verticalFieldOfView, float horizontalFieldOfView, float nearClip, float farClip, out Matrix perspective)
         {
-            float h = 1f / ((float)Math.Tan(verticalFieldOfView * 0.5f));
-            float w = 1f / ((float)Math.Tan(horizontalFieldOfView * 0.5f));
+            float h = 1f / (MathF.Tan(verticalFieldOfView * 0.5f));
+            float w = 1f / (MathF.Tan(horizontalFieldOfView * 0.5f));
             float m33 = farClip / (nearClip - farClip);
             perspective.X = new Vector4(w, 0, 0, 0);
             perspective.Y = new Vector4(0, h, 0, 0);

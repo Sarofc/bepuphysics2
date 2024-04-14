@@ -13,6 +13,15 @@ namespace BepuUtilities
         public int Y;
         public int Z;
 
+        public Int3() { }
+
+        public Int3(int x, int y, int z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+        
         public override int GetHashCode()
         {
             const ulong p1 = 961748927UL;

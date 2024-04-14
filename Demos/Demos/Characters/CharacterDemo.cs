@@ -9,6 +9,7 @@ using DemoContentLoader;
 using DemoUtilities;
 using DemoRenderer.UI;
 using OpenTK.Input;
+using System.Runtime.InteropServices;
 
 namespace Demos.Demos.Characters
 {
@@ -228,8 +229,19 @@ namespace Demos.Demos.Characters
             float textHeight = 16;
             var position = new Vector2(32, renderer.Surface.Resolution.Y - textHeight * 9);
             renderer.TextBatcher.Write(text.Clear().Append("Toggle character: C"), position, textHeight, new Vector3(1), font);
+
+            var charactorWorldPos = Simulation.Bodies[character.BodyHandle].Pose.Position;
+            var charactorWorldRot = Simulation.Bodies[character.BodyHandle].Pose.Orientation;
+            QuaternionEx.Transform(-Vector3.UnitZ, charactorWorldRot, out var charactorForward);
+
+            ref var cc = ref characters.GetCharacterByBodyHandle(character.BodyHandle);
+
+            position.Y += textHeight * 1.2f;
+            renderer.TextBatcher.Write(text.Clear().Append($"Pos: {charactorWorldPos} CharactorForword: {charactorForward} Rot: {charactorWorldRot} ViewDir: {cc.ViewDirection} Camera up:{camera.Up} fwd:{camera.Forward}"), position, textHeight, new Vector3(1), font);
+
             position.Y += textHeight * 1.2f;
             character.RenderControls(position, textHeight, renderer.TextBatcher, text, font);
+
             if (characterActive)
             {
                 character.UpdateCameraPosition(camera);

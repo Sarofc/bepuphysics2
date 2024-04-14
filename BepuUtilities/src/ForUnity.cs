@@ -8,11 +8,16 @@ namespace System.Runtime.InteropServices
 {
     public static class FNativeMemory
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void* AlignedAlloc(nuint byteCount, nuint alignment)
         {
-#if UNITY
-            UnsafeUtility.Alloc();
-#elif NET5_0_OR_GREATER
+#if UNITY_2022_3_OR_NEWER
+#if DEBUG
+            return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked((long)byteCount, (int)alignment, Unity.Collections.Allocator.Persistent, 0);
+#else
+            return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc((long)byteCount, (int)alignment, Unity.Collections.Allocator.Persistent);
+#endif
+#elif NET5_0_OR_GREATER                  
             return NativeMemory.AlignedAlloc(byteCount, alignment);
 #else
 
@@ -20,15 +25,66 @@ namespace System.Runtime.InteropServices
 #endif
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void AlignedFree(void* ptr)
         {
-#if UNITY
-            UnsafeUtility.Free();
+#if UNITY_2022_3_OR_NEWER
+#if DEBUG
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.FreeTracked(ptr, Unity.Collections.Allocator.Persistent);
+#else
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(ptr, Unity.Collections.Allocator.Persistent);
+#endif
 #elif NET5_0_OR_GREATER
             NativeMemory.AlignedFree(ptr);
 #else
             FallbackAllocator.Free(ptr);
 #endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Clear(void* ptr, nuint byteCount)
+        {
+#if UNITY_2022_3_OR_NEWER
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemClear(ptr, (int)byteCount);
+#elif NET5_0_OR_GREATER                  
+            NativeMemory.Clear(ptr, byteCount);
+#else
+            throw new PlatformNotSupportedException();
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Copy(void* source, void* destination, nuint byteCount)
+        {
+#if UNITY_2022_3_OR_NEWER
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination, source, (int)byteCount);
+#elif NET5_0_OR_GREATER                  
+            NativeMemory.Copy(source, destination, byteCount);
+#else
+            throw new PlatformNotSupportedException();
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int RoundToAlignment(int stride, int alignment)
+        {
+            switch (alignment)
+            {
+                case 1:
+                    return stride;
+                case 2:
+                    return (stride + 1 >> 1) * 2;
+                case 4:
+                    return (stride + 3 >> 2) * 4;
+                case 8:
+                    return (stride + 7 >> 3) * 8;
+                case 16:
+                    return (stride + 15 >> 4) * 16;
+                case 32:
+                    return (stride + 31 >> 5) * 32;
+                default:
+                    throw new InvalidOperationException(string.Format("Invalid Alignment: {0}", alignment));
+            }
         }
     }
 
@@ -84,8 +140,8 @@ namespace System.Numerics
 {
     public static class FBitOperations
     {
-        private static ReadOnlySpan<byte> Log2DeBruijn => // 32
-        [
+        private static byte[] Log2DeBruijn { get; } = new byte[32]// 32
+        {
             00,
             09,
             01,
@@ -118,7 +174,7 @@ namespace System.Numerics
             05,
             04,
             31
-        ];
+        };
         /// <summary>
         /// Count the number of leading zero bits in a mask.
         /// Similar in behavior to the x86 instruction LZCNT.
@@ -249,7 +305,7 @@ namespace System.Numerics
             // uint.MaxValue >> 27 is always in range [0 - 31] so we use Unsafe.AddByteOffset to avoid bounds check
             return Unsafe.AddByteOffset(
                 // Using deBruijn sequence, k=2, n=5 (2^5=32) : 0b_0000_0111_1100_0100_1010_1100_1101_1101u
-                ref MemoryMarshal.GetReference(Log2DeBruijn),
+                ref MemoryMarshal.GetReference(Log2DeBruijn.AsSpan()),
                 // uint|long -> IntPtr cast on 32-bit platforms does expensive overflow checks not needed here
                 (IntPtr)(int)((value * 0x07C4ACDDu) >> 27));
         }
@@ -258,7 +314,7 @@ namespace System.Numerics
 
 namespace System.Numerics
 {
-    public static class FVector
+    public static partial class FVector
     {
         /// <summary>Computes the floor of each element in a vector.</summary>
         /// <param name="value">The vector that will have its floor computed.</param>
@@ -287,7 +343,6 @@ namespace System.Numerics
             return Unsafe.Add(ref address, index);
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void SetElementUnsafe<T>(in this Vector<T> vector, int index, T value)
             where T : struct
@@ -307,6 +362,16 @@ namespace System.Numerics
 #else
             return FloorCore(x);
 #endif
+        }
+    }
+
+    partial class FVector
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ref float GetElement(in this Vector4 vector, int index)
+        {
+            ref var address = ref Unsafe.As<Vector4, float>(ref Unsafe.AsRef(in vector));
+            return ref Unsafe.Add(ref address, index);
         }
     }
 }
