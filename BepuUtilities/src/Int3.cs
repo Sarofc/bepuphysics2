@@ -1,4 +1,4 @@
-﻿using BepuUtilities.Collections;
+using BepuUtilities.Collections;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -12,8 +12,6 @@ namespace BepuUtilities
         public int X;
         public int Y;
         public int Z;
-
-        public Int3() { }
 
         public Int3(int x, int y, int z)
         {
