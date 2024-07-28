@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,7 +7,7 @@ namespace BepuUtilities
     /// <summary>
     /// Provides additional functionality and some lower overhead function variants for Quaternions.
     /// </summary>
-    public static class QuaternionEx
+    public static partial class QuaternionEx
     {
         /// <summary>
         /// Adds two quaternions together.
@@ -702,6 +702,10 @@ namespace BepuUtilities
             Conjugate(targetBasis, out var basisInverse);
             ConcatenateWithoutOverlap(rotation, basisInverse, out localRotation);
         }
+    }
+
+    partial class QuaternionEx
+    {
 
         /// <summary>
         /// 同<see cref="UnityEngine.Quaternion.LookRotation(UnityEngine.Vector3, UnityEngine.Vector3)"/>
@@ -739,5 +743,33 @@ namespace BepuUtilities
             //            axis: MathF.normalizesafe(MathF.cross(from, to))
             //        );
         }
+    }
+
+    public static class Vector3Ex
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Angle(Vector3 from, Vector3 to)
+        {
+            float num = (float)Math.Sqrt(from.LengthSquared() * to.LengthSquared());
+            if (num < 1E-15f)
+            {
+                return 0f;
+            }
+
+            float num2 = Math.Clamp(Vector3.Dot(from, to) / num, -1f, 1f);
+            return MathF.Acos(num2) * 57.29578f;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float SignedAngle(Vector3 from, Vector3 to, Vector3 axis)
+        {
+            float num = Angle(from, to);
+            float num2 = from.Y * to.Z - from.Z * to.Y;
+            float num3 = from.Z * to.X - from.X * to.Z;
+            float num4 = from.X * to.Y - from.Y * to.X;
+            float num5 = MathF.Sign(axis.X * num2 + axis.Y * num3 + axis.Z * num4);
+            return num * num5;
+        }
+
     }
 }
