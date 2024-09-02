@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -140,7 +140,7 @@ namespace System.Numerics
 {
     public static class FBitOperations
     {
-        private static byte[] Log2DeBruijn { get; } = new byte[32]// 32
+        private readonly static byte[] Log2DeBruijn = new byte[32]// 32
         {
             00,
             09,
@@ -352,9 +352,7 @@ namespace System.Numerics
             Unsafe.Add(ref address, index) = value;
         }
 
-#if NET8_0_OR_GREATER
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         public static Vector<float> Floor(Vector<float> x)
         {
 #if NET8_0_OR_GREATER
