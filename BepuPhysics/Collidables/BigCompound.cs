@@ -160,7 +160,7 @@ namespace BepuPhysics.Collidables
                     CompoundChildShapeTester tester;
                     tester.T = -1;
                     tester.Normal = default;
-                    Shapes[child.ShapeIndex.Type].RayTest(child.ShapeIndex.Index, CompoundChild.AsPose(ref child), *rayData, ref *maximumT, ref tester);
+                    Shapes[child.ShapeIndex.Type].RayTest(child.ShapeIndex.Index, child.AsPose(), *rayData, ref *maximumT, ref tester);
                     if (tester.T >= 0)
                     {
                         Debug.Assert(*maximumT >= tester.T, "Whatever generated this ray hit should have obeyed the current maximumT value.");
@@ -327,7 +327,15 @@ namespace BepuPhysics.Collidables
         {
             var bodyInertia = CompoundBuilder.ComputeInertia(Children, childMasses, shapes, out centerOfMass);
             //Recentering moves the children around, so the tree needs to be updated.
-            Tree.Refit();
+            //Scanning through and explicitly shifting the nodes is slightly more efficient than updating leaf bounds and refitting.
+            for (int i = 0; i < Tree.NodeCount; ++i)
+            {
+                ref var node = ref Tree.Nodes[i];
+                node.A.Min -= centerOfMass;
+                node.A.Max -= centerOfMass;
+                node.B.Min -= centerOfMass;
+                node.B.Max -= centerOfMass;
+            }
             return bodyInertia;
         }
 
